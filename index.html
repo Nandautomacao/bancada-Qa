@@ -68,34 +68,56 @@
   <p>Coloque as histórias na fila.</p>
 
   <form id="form-fila">
-    <label>Chave <input id="chave" placeholder="DEMO-101"></label>
-    <label>Título <input id="titulo" placeholder="Login com e-mail"></label>
+    <label>Chave <input id="chave" placeholder="DEMO-101" maxlength="20"></label>
+    <label>Título <input id="titulo" placeholder="Login com e-mail" maxlength="120"></label>
     <button type="submit">Colocar na fila</button>
   </form>
 
   <ul id="lista"></ul>
-    <script>
+     <script>
     const form = document.getElementById("form-fila");
     const lista = document.getElementById("lista");
 
+    // 1. Carrega a fila salva no navegador (ou começa vazia)
+    let fila = JSON.parse(localStorage.getItem("fila") || "[]");
+
+    // 2. Desenha a lista na tela
+    function mostrar() {
+      lista.innerHTML = "";
+      fila.forEach(function (h) {
+        const item = document.createElement("li");
+        const texto = document.createElement("span");
+        texto.textContent = h.chave + "  " + h.titulo;   // textContent = seguro, nunca vira código
+        const status = document.createElement("span");
+        status.className = "status";
+        status.textContent = "Na fila";
+        item.append(texto, status);
+        lista.append(item);
+      });
+    }
+
+    // 3. Quando clicar em "Colocar na fila"
     form.addEventListener("submit", function (evento) {
       evento.preventDefault();
-
       const chave = document.getElementById("chave").value.trim().toUpperCase();
       const titulo = document.getElementById("titulo").value.trim();
 
-      if (chave === "") {
-        alert("Digite a chave da história.");
+      if (!/^[A-Z][A-Z0-9]+-\d+$/.test(chave)) {
+        alert("A chave precisa ter o formato ABC-123.");
+        return;
+      }
+      if (fila.some(function (h) { return h.chave === chave; })) {
+        alert(chave + " já está na fila.");
         return;
       }
 
-      const item = document.createElement("li");
-      item.innerHTML = "<span><strong>" + chave + "</strong> " + titulo + "</span>" +
-                       "<span class='status'>Na fila</span>";
-      lista.prepend(item);
-
+      fila.unshift({ chave: chave, titulo: titulo });
+      localStorage.setItem("fila", JSON.stringify(fila));   // salva no navegador
+      mostrar();
       form.reset();
     });
+
+    mostrar();
   </script>
 </body>
 </html>
